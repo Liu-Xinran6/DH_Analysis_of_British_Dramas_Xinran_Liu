@@ -1,1 +1,3 @@
-# Intro_DH_Analysis_of_British_Dramas-_16thto19thCen
+# Introduction to Digital Humanities_Individual Project
+##Analysis of British Dramas 16th to 19th Century
+###Xinran Liu (r1069245)
