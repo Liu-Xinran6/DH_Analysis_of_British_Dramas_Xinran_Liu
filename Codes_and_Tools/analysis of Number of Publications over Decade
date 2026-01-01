@@ -1,1 +1,68 @@
 # 2.1 Data processing for the analysis of Number of Publications over Decade
+import pandas as pd
+import numpy as np
+
+input_file = 'dh_group7_drama_251229.csv'
+df = pd.read_csv(input_file)
+
+print(f"Original Row Count: {len(df)}")
+
+# Clean author column
+
+df['Cleaned_Author'] = df['author (n)']
+
+# use other author if main author is missing
+if 'other author (n)' in df.columns:
+    # fillna() checks if Cleaned_Author is empty; if so, it takes the value from 'other author (n)'
+    df['Cleaned_Author'] = df['Cleaned_Author'].fillna(df['other author (n)'])
+
+# fill remaining missing values with 'Unknown'
+df['Cleaned_Author'] = df['Cleaned_Author'].fillna('Unknown')
+
+# drop rows without year
+df = df.dropna(subset=['p year'])
+
+# convert year to integer
+df['Publication_Year'] = df['p year'].astype(int)
+
+# create decade column
+df['Decade_Label'] = ((df['Publication_Year'] // 10) * 10).astype(str) + 's'
+
+# publisher location
+if 'p location' in df.columns:
+    df['Publisher_Location'] = df['p location'].fillna('Unknown').astype(str)
+
+# publisher name
+if 'p name' in df.columns:
+    df['Publisher_Name'] = df['p name'].fillna('Unknown').astype(str)
+
+# title
+if 'title (n)' in df.columns:
+    df['Cleaned_Title'] = df['title (n)'].fillna('Unknown').astype(str)
+
+# genre
+if 'type' in df.columns:
+    df['Genre_Type'] = df['type'].fillna('Unknown').astype(str)
+
+# Define the list of columns for Tableau
+columns_to_keep = [
+    'Publication_Year', 
+    'Decade_Label', 
+    'Cleaned_Author', 
+    'Cleaned_Title', 
+    'Publisher_Location', 
+    'Publisher_Name',
+    'Genre_Type'
+]
+
+final_columns = []
+for col in columns_to_keep:
+    if col in df.columns:
+        final_columns.append(col)
+
+df_final = df[final_columns]
+
+df_final.to_csv('drama_master_cleaned_final.csv', index=False)
+
+print("Final Row Count:", len(df_final))
+print(df_final.head())
