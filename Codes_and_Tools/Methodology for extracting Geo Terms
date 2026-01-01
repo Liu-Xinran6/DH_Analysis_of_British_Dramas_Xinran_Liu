@@ -1,0 +1,45 @@
+Methodology (Revised & Enhanced)
+
+This section employs a hybrid methodology combining Computational Text Analysis and Culturomics to quantitatively mine British drama titles for geographic signals.
+
+Dynamic Feature Extraction & Global Frequency Analysis
+To capture the holistic lexical characteristics of the corpus, standard Natural Language Processing (NLP) preprocessing was applied to the cleaned title data.
+
+Tokenization: Using Python’s re module, unstructured text titles were converted into a Bag-of-Words representation.
+
+Frequency Profiling: The full corpus was scanned using collections.Counter to extract the Top 500 unigrams.
+
+Purpose: This automated approach reduced selection bias, provided empirical support for constructing a high-coverage geographic dictionary, and ensured reproducibility for future corpus expansion.
+
+Iterative Dictionary Construction (Hybrid Approach)
+To ensure both precision and recall in geographic categorization, a hybrid, iterative strategy was employed:
+
+Phase I – Seed Generation: Based on historical and cultural context, a preliminary list of "Seed Keywords" representing core nations or regions (e.g., France, China, America) was established.
+
+Phase II – Contextual Expansion: A full-corpus dictionary scan and seed-based co-occurrence check was applied to identify additional low-frequency but historically relevant geographic terms. Due to the short titles and conceptual nature of seeds, most co-occurring words were general or thematic rather than new place names; therefore, this step served primarily to validate the keyword list rather than automatically expand it. Ambiguous or polysemous terms (e.g., Russian) were flagged for manual review and assigned to one of three categories where appropriate.
+
+Phase III – Empirical Validation: The dictionary was cross-referenced against the Top 500 unigrams to confirm tendencies such as preference for city names over nations (e.g., Venice > Italy) or identity labels (e.g., Turk).
+
+Resulting Taxonomy: The vocabulary was categorized into three mutually exclusive semantic groups:
+
+Continental: Traditional European powers and cultural centers (e.g., France, Rome, Venice), representing Old World political referents.
+
+Colonial/New World: Americas, the Caribbean, and colonial expansion activities (e.g., Virginia, Plantation, Conquest), representing material empire-building.
+
+Oriental/Exotic: Ottoman Empire and Far East (e.g., Turk, China, Persia, Tartary), representing cultural imaginaries of “Othering.”
+
+Temporal Aggregation & Normalization
+To account for uneven publication volumes across decades, relative frequencies rather than raw counts were calculated:
+
+Aggregation: Data was grouped by Decade_Label (e.g., 1750s).
+
+Pattern Matching: Regex-based vectorization (\bterm\b) was used to detect the presence of each geographic category in titles.
+
+Normalization: The proportion of each category relative to total geographic mentions in that decade was calculated, allowing fair comparison over time and accurately reflecting each geographic discourse’s “Share of Voice.”
+
+Visualization
+Normalized data was visualized with 100% stacked bar charts using Matplotlib and Seaborn, highlighting temporal shifts in British drama from early Continental geopolitics toward Colonial expansion and Oriental imagination.
+
+Core Tech Stack: Python (Pandas, Re, Collections, Matplotlib, Seaborn)
+
+
