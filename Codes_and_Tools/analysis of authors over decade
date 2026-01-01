@@ -1,0 +1,33 @@
+# Separate 'Unknown' from Identified Authors
+unknown_df = df_final[df_final['Cleaned_Author'] == 'Unknown']
+identified_df = df_final[df_final['Cleaned_Author'] != 'Unknown']
+
+# Basic Statistics
+total_records = len(df_final)
+unknown_count = len(unknown_df)
+identified_count = len(identified_df)
+unique_authors_count = identified_df['Cleaned_Author'].nunique()
+
+# Calculate the percentage of unknown works
+unknown_percentage = (unknown_count / total_records) * 100
+
+print(f"Total Records: {total_records}")
+print(f"Identified Works: {identified_count}")
+print(f"Unknown/Missing Authors: {unknown_count} ({unknown_percentage:.2f}%)")
+print(f"Total Unique Identified Authors: {unique_authors_count}")
+
+# Find Top Authors
+author_counts = identified_df['Cleaned_Author'].value_counts()
+
+print(f"\nTop 10 Most Prolific Authors")
+print(author_counts.head(10))
+
+# How many plays the average author writes
+avg_productivity = identified_count / unique_authors_count
+print(f"\nAverage plays per author: {avg_productivity:.2f}")
+
+# Decade Analysis (Who was active when?)
+authors_per_decade = df_final.groupby('Decade_Label')['Cleaned_Author'].nunique()
+
+print(f"\nUnique Authors Active per Decade")
+print(authors_per_decade.sort_index())
