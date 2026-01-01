@@ -1,0 +1,212 @@
+import pandas as pd
+import re
+from collections import Counter
+import os
+
+INPUT_FILE = 'drama_master_cleaned_final.csv'
+
+SEED_GROUPS = {
+    'Public_Discovery': {'king', 'queen', 'royal', 'state', 'war', 'empire'},
+    'Private_Discovery': {'husband', 'wife', 'family', 'home', 'marriage'}
+}
+
+STOPWORDS = set([
+    'the', 'a', 'an', 'of', 'and', 'in', 'to', 'for', 'with', 'by', 'on', 'at', 'etc', 'or', 'more than', 'is', 'when', 'wherein',
+    'drama', 'play', 'tragedy', 'comedy', 'opera', 'farce',
+    'act', 'acts', 'scene', 'prologue', 'epilogue', 
+    'new', 'old', 'edition', 'printed', 'volume', 'acted', 'majesty', 
+    'one', 'two', 'three', 'four', 'five', 'first', 'second', 'third', 'iii'
+])
+
+def scan_cooccurrences():
+    if not os.path.exists(INPUT_FILE):
+        print(f"File not found: {INPUT_FILE}")
+        return
+
+    df = pd.read_csv(INPUT_FILE)
+    
+    title_col = next((c for c in ['Cleaned_Title', 'title (n)', 'Title'] if c in df.columns), None)
+    if not title_col:
+        print("Title column not found.")
+        return
+
+    print(f"Analyzing {len(df)} titles for contextual keywords\n")
+
+    for group_name, seeds in SEED_GROUPS.items():
+        found_words = Counter()
+        
+        for text in df[title_col].astype(str):
+            words = re.findall(r'\b[a-z]{2,}\b', text.lower())
+            word_set = set(words)
+            
+            if word_set & seeds:
+                for w in word_set:
+                    if w not in seeds and w not in STOPWORDS:
+                        found_words[w] += 1
+        
+        print(f" Top Candidates for [{group_name}] ")
+        for word, count in found_words.most_common(20):
+            print(f"  • {word:<12} (co-occurs {count} times)")
+
+if __name__ == "__main__":
+    scan_cooccurrences()
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import re
+
+INPUT_FILE = 'drama_master_cleaned_final.csv' 
+START_YEAR = 1660
+END_YEAR = 1900
+ROLLING_WINDOW = 3
+
+#  UPDATED LEXICONS BASED ON CO-OCCURRENCE SCAN 
+LEXICONS = {
+    'Public_Sphere': [
+        # Core Concepts
+        'king', 'queen', 'prince', 'princess', 'royal', 'court', 'crown', 
+        'throne', 'monarch', 'majesty', 'sovereign', 'empire', 'state',
+        'parliament', 'senate', 'ambassador', 'governor', 'magistrate',
+        'war', 'peace', 'victory', 'conquest', 'treaty',
+        
+        # Geopolitics (Validated by Scan)
+        'england', 'britain', 'albion', 'rome', 'greece', 'persia', 'scots',
+        
+        # Specific Monarchs/History (Found by Scan - CRITICAL for 19th C.)
+        'history', 'historical', 
+        'richard', 'henry', 'charles', 'alexander', 
+        'elizabeth', 'mary', 'james', 'edward', 'caesar'
+    ],
+    
+    'Private_Sphere': [
+        # Kinship Structure
+        'husband', 'wife', 'father', 'mother', 'son', 'daughter', 
+        'brother', 'sister', 'sisters', 'child', 'parent', 'widow', 'orphan', 
+        'family', 'marriage', 'wedding', 'bride', 'bridegroom',
+        
+        # Domestic Spaces
+        'home', 'house', 'chamber', 'closet', 'garden', 'cottage', 'domestic',
+        
+        # Emotional/Moral Interiority (Found by Scan)
+        'jealous', 'jealousy', 'secret', 'secrets', 'fatal', 'fond',
+        'reputation', 'honor', 'distress', 'divorce', 'elopement', 
+        'vow', 'oath' # "Vow" is risky but often domestic; removed "Love" strictly.
+    ]
+}
+
+if not os.path.exists(INPUT_FILE):
+    # Fallback for testing
+    INPUT_FILE = 'dh_group7_drama_251229.csv'
+
+try:
+    df = pd.read_csv(INPUT_FILE)
+    
+    # 2.1 Dynamic Column Detection
+    year_col = next((c for c in ['Publication_Year', 'p year', 'clean_year'] if c in df.columns), None)
+    title_col = next((c for c in ['Cleaned_Title', 'title (n)', 'Title'] if c in df.columns), None)
+    
+    if not year_col or not title_col:
+        raise ValueError(f"Missing columns. Found: {df.columns.tolist()}")
+
+    # 2.2 Standardize Year
+    df['Year_Clean'] = pd.to_numeric(df[year_col], errors='coerce')
+    df = df.dropna(subset=['Year_Clean'])
+    
+    # Filter Date Range
+    df = df[(df['Year_Clean'] >= START_YEAR) & (df['Year_Clean'] <= END_YEAR)]
+    
+    # 2.3 Create Decade
+    df['Decade'] = (df['Year_Clean'] // 10 * 10).astype(int)
+    
+    # 2.4 Text Preprocessing
+    df['Title_Lower'] = df[title_col].astype(str).str.lower()
+    
+    print(f" Data Loaded: {len(df)} titles from {START_YEAR} to {END_YEAR}")
+
+except Exception as e:
+    print(f" Critical Error: {e}")
+    exit()
+
+# THE TAGGING ENGINE
+print(" Tagging titles with updated lexicons")
+analysis_metrics = []
+
+for label, terms in LEXICONS.items():
+    # Construct Regex: \b matches word boundaries to avoid partial matches
+    # e.g., "state" won't match "statement"
+    pattern = r'(?i)\b(?:' + '|'.join(terms) + r')\b'
+    col_name = f'Has_{label}'
+    
+    # Apply tagging
+    df[col_name] = df['Title_Lower'].str.contains(pattern, regex=True)
+    analysis_metrics.append(col_name)
+
+# AGGREGATION & SMOOTHING (The "Unified Pipeline")
+all_decades = range(START_YEAR, END_YEAR + 10, 10)
+
+# Calculate RAW Percentage per Decade
+df_trend = df.groupby('Decade')[analysis_metrics].mean() * 100
+
+# Reindex to handle missing decades (fills with NaN)
+df_trend = df_trend.reindex(all_decades)
+
+# APPLY SMOOTHING (Rolling Average)
+# min_periods=1 is crucial: it shows data even if neighbors are missing
+df_smooth = df_trend.rolling(window=ROLLING_WINDOW, center=True, min_periods=1).mean()
+
+# VISUALIZATION
+plt.style.use('seaborn-v0_8-whitegrid')
+fig, ax = plt.subplots(figsize=(12, 6))
+
+colors = {'Has_Public_Sphere': '#2c3e50', 'Has_Private_Sphere': '#c0392b'}
+labels = {'Has_Public_Sphere': 'Public Sphere (State/History)', 'Has_Private_Sphere': 'Private Sphere (Domestic/Family)'}
+
+# Plot Main Lines
+for metric in analysis_metrics:
+    # dropna() allows plotting discontinuous lines if gaps exist
+    valid_data = df_smooth[metric].dropna()
+    ax.plot(valid_data.index, valid_data, 
+            label=labels[metric], 
+            color=colors[metric], 
+            linewidth=2.5, 
+            marker='o', markersize=4)
+
+# Highlight the Area where Private > Public
+df_interp = df_smooth.interpolate(method='linear')
+ax.fill_between(df_interp.index, 
+                df_interp['Has_Public_Sphere'], 
+                df_interp['Has_Private_Sphere'],
+                where=(df_interp['Has_Private_Sphere'] > df_interp['Has_Public_Sphere']),
+                color='#c0392b', alpha=0.15, 
+                label='The "Domestic Turn"')
+
+# Add Historical Context Markers
+ax.axvline(x=1737, color='black', linestyle='--', alpha=0.6, linewidth=1)
+ax.text(1740, 28, 'Licensing Act (1737)', fontsize=10, rotation=0, color='#333')
+
+# Formatting
+ax.set_title(f"The Decline of the State & The Rise of the Family\nBritish Drama Titles ({START_YEAR}-{END_YEAR})", fontsize=14, fontweight='bold')
+ax.set_ylabel("Frequency in Titles (%)")
+ax.set_xlabel("Decade")
+ax.set_ylim(0, 35) # Fix Y-axis scale for consistency
+ax.legend(loc='upper right', frameon=True)
+
+plt.tight_layout()
+plt.savefig('public_private_trend_v2_refined.png', dpi=300)
+print("Chart saved as 'public_private_trend_v2_refined.png'")
+
+# Prepare data for Tableau (Long Format)
+df_tableau = df_smooth.reset_index().rename(columns={'index': 'Decade'})
+df_tableau = df_tableau.melt(id_vars=['Decade'], value_vars=analysis_metrics, 
+                             var_name='Category', value_name='Percentage')
+
+# Clean Category Names
+df_tableau['Category'] = df_tableau['Category'].str.replace('Has_', '', regex=False)
+
+# Add Volume Data (Context)
+volume = df.groupby('Decade').size().reindex(all_decades).fillna(0).reset_index(name='Total_Titles')
+df_tableau = pd.merge(df_tableau, volume, on='Decade', how='left')
+
+df_tableau.to_csv('tableau_public_private_refined.csv', index=False)
+print("Tableau dataset saved as 'tableau_public_private_refined.csv'")
