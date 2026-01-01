@@ -1,0 +1,96 @@
+import pandas as pd
+file_path = 'drama_master_cleaned_final.csv'
+df = pd.read_csv(file_path)
+
+df['Publisher_Name'] = df['Publisher_Name'].fillna('Unknown')
+# Calculate Total Publishers and Missing Rate
+total_rows = len(df)
+
+unknown_rows = len(df[df['Publisher_Name'] == 'Unknown'])
+
+missing_rate_global = (unknown_rows / total_rows) * 100
+
+# Count unique publishers (excluding 'Unknown')
+known_publishers_df = df[df['Publisher_Name'] != 'Unknown']
+total_publishers_count = known_publishers_df['Publisher_Name'].nunique()
+
+print(f"Total Unique Publishers: {total_publishers_count}")
+print(f"Global Missing Data Rate: {missing_rate_global:.2f}%")
+
+# Find Top 10 Publishers
+top_publishers = known_publishers_df['Publisher_Name'].value_counts().reset_index()
+top_publishers.columns = ['Publisher_Name', 'Publication_Count']
+
+top_10_df = top_publishers.head(10)
+
+top_10_df.to_csv('viz_top10_publishers.csv', index=False)
+print("Saved: 'viz_top10_publishers.csv'")
+
+# CR3 Analysis per Decade
+
+results_list = []
+
+decades = sorted(df['Decade_Label'].unique())
+
+for decade in decades:
+    
+    # 1. Get data for this specific decade
+    decade_data = df[df['Decade_Label'] == decade]
+    total_in_decade = len(decade_data)
+    
+    # 2. Calculate Missing Rate for this decade
+    unknown_in_decade = len(decade_data[decade_data['Publisher_Name'] == 'Unknown'])
+    decade_missing_rate = (unknown_in_decade / total_in_decade) * 100
+    
+    # 3. Calculate Market Share for known publishers
+    # Filter out 'Unknown' to find the top real publishers
+    known_data = decade_data[decade_data['Publisher_Name'] != 'Unknown']
+    
+    # Count publications for each publisher in this decade
+    publisher_counts = known_data['Publisher_Name'].value_counts()
+    
+    # 4. Find Top 3 and calculate CR3
+    # If there are no known publishers, CR3 is 0
+    if len(publisher_counts) == 0:
+        cr3_value = 0
+        top1 = "None"
+        top2 = "None"
+        top3 = "None"
+    else:
+        market_shares = (publisher_counts / total_in_decade) * 100
+        
+        # Take the top 3
+        top_3_shares = market_shares.head(3)
+        cr3_value = top_3_shares.sum()
+        
+        names = top_3_shares.index.tolist()
+        top1 = names[0] if len(names) > 0 else "None"
+        top2 = names[1] if len(names) > 1 else "None"
+        top3 = names[2] if len(names) > 2 else "None"
+
+    # 5. Determine Market Structure
+    if cr3_value > 60:
+        structure = "Oligopoly"
+    elif cr3_value < 40:
+        structure = "Free Competition"
+    else:
+        structure = "Moderate"
+
+    # 6. Append data to our list
+    results_list.append({
+        'Decade_Label': decade,
+        'CR3_Percentage': cr3_value,
+        'Missing_Rate_Percentage': decade_missing_rate,
+        'Market_Structure': structure,
+        'Top1_Publisher': top1,
+        'Top2_Publisher': top2,
+        'Top3_Publisher': top3
+    })
+
+cr3_df = pd.DataFrame(results_list)
+
+cr3_df.to_csv('viz_cr3_market_analysis.csv', index=False)
+print("Saved: 'viz_cr3_market_analysis.csv'")
+
+print("\nPreview of CR3 Data:")
+print(cr3_df.head())
