@@ -1,0 +1,530 @@
+from collections import Counter
+import re
+
+all_titles = ' '.join(df['Cleaned_Title']).lower()
+
+# extract words and count their frequency
+words = re.findall(r'\w+', all_titles)
+word_counts = Counter(words)
+
+# top 500
+print(word_counts.most_common(500))
+import pandas as pd
+import re
+from collections import Counter
+
+# PART 1: Generate Top 500 Word List for Inspection
+
+# Join all titles into one string and convert to lowercase
+all_text = ' '.join(df['Cleaned_Title'].astype(str)).lower()
+
+# Extract words using Regular Expressions (removes punctuation)
+words = re.findall(r'\b\w+\b', all_text)
+
+# Define Basic Stopwords to remove noise
+basic_stopwords = {
+    'the', 'a', 'an', 'of', 'and', 'in', 'to', 'or', 'for', 'with', 
+    'on', 'at', 'by', 'from', 's', 'is', 'it', 'that', 'as', 'be', 'are'
+}
+
+# Filter out stopwords and single letters
+filtered_words = [w for w in words if w not in basic_stopwords and len(w) > 1]
+
+# Count Frequencies
+counter_obj = Counter(filtered_words)
+word_counts_top500 = counter_obj.most_common(500)
+
+# 6. PRINT FOR HUMAN INSPECTION
+print("Word : Frequency")
+
+for rank, (word, freq) in enumerate(word_counts_top500, 1):
+    print(f"({rank}) {word} : {freq}")
+
+print(" Geographic terms will then be added to the dictionary")
+import pandas as pd
+import re
+from collections import Counter
+
+# PART 2.1 : Generate Dictionaries & Classification
+                                  
+# RE-RUN DATA PROCESSING (To ensure consistency)
+all_text = ' '.join(df['Cleaned_Title'].astype(str)).lower()
+words = re.findall(r'\b\w+\b', all_text)
+basic_stopwords = {
+    'the', 'a', 'an', 'of', 'and', 'in', 'to', 'or', 'for', 'with', 
+    'on', 'at', 'by', 'from', 's', 'is', 'it', 'that', 'as', 'be', 'are'
+}
+filtered_words = [w for w in words if w not in basic_stopwords and len(w) > 1]
+counter_obj = Counter(filtered_words)
+word_counts_top500 = counter_obj.most_common(500)
+
+# THESE LISTS ARE UPDATED BASED ON THE FINDINGS IN STEP 1
+continental_terms = {
+    'france', 'italy', 'spain', 'germany', 'greece', 'england', 'scotland', 'ireland', 'holland', 'netherlands', 
+    'poland', 'russia', 'muscovy', 'sweden', 'denmark', 'portugal', 'austria', 'hungary', 'swiss', 'flanders',  
+    'rome', 'paris', 'venice', 'naples', 'florence', 'verona', 'sicily', 'vienna', 'madrid', 'lisbon', 'seville', 
+    'athens', 'sparta', 'troy', 'french', 'spanish', 'italian', 'german', 'dutch', 'english', 'scottish', 'irish', 
+    'roman', 'grecian', 'greek', 'venetian', 'sicilian', 'polish', 'russian', 'dane', 'danish', 'portuguese', 
+    'castilian', 'aragonese'
+    # Add new Continental words here...
+}
+
+colonial_terms = {
+    'america', 'new world', 'west indies', 'indies', 'western', 'atlantic', 'virginia', 'canada', 'quebec', 
+    'carolina', 'florida', 'new york', 'boston', 'peru', 'mexico', 'brazil', 'panama', 'guiana', 'amazon', 
+    'inca', 'aztec', 'montezuma', 'cortez', 'pizarro', 'jamaica', 'caribbean', 'barbados', 'cuba', 'haiti', 
+    'domingo', 'bermudas', 'australia', 'botany bay', 'van diemen', 'colony', 'colonization', 'conquest', 
+    'plantation', 'planter', 'slave', 'slavery', 'negro', 'savage', 'voyage', 'discovery', 'island', 'isle', 'indian'
+    # Add new Colonial words here...
+}
+
+oriental_terms = {
+    'china', 'chinese', 'japan', 'siam', 'cathay', 'tartary', 'tartar', 'mongol', 'india', 'east indies', 
+    'mogul', 'agra', 'bengal', 'ceylon', 'persia', 'persian', 'turk', 'turkish', 'turkey', 'ottoman', 'sultan', 
+    'mahomet', 'mohammed', 'constantinople', 'byzantium', 'seraglio', 'harem', 'islam', 'arabia', 'syria', 
+    'egypt', 'egyptian', 'cairo', 'nile', 'alexandria', 'morocco', 'moor', 'moorish', 'algiers', 'tunis', 
+    'tripoli', 'barbary', 'zara', 'babylon', 'assyria', 'cyrus', 'darius', 'xerxes', 'jerusalem', 'hebrew', 
+    'jew', 'israel'
+    # Add new Oriental words here...
+}
+
+# Container for storing results
+classified_terms = {
+    'Continental': [],
+    'Colonial': [],
+    'Oriental': []
+}
+
+# Loop: Iterate through the cleaned Top 500 list
+for word, frequency in word_counts_top500:
+    if word in continental_terms:
+        classified_terms['Continental'].append((word, frequency)) 
+    elif word in colonial_terms:
+        classified_terms['Colonial'].append((word, frequency))
+    elif word in oriental_terms:
+        classified_terms['Oriental'].append((word, frequency))
+
+print("\nContinental Terms Found (Top 500)")
+print(classified_terms['Continental'])
+
+print("\nColonial Terms Found (Top 500")
+print(classified_terms['Colonial'])
+
+print("\nOriental Terms Found (Top 500)")
+print(classified_terms['Oriental'])
+import pandas as pd
+import re
+from collections import Counter
+import os
+# STEP 2.2: DICTIONARY EXPANSION (Co-occurrence)
+
+file_path = 'drama_master_cleaned_final.csv'
+
+# Pre-processing
+df['analysis_text'] = df['Cleaned_Title'].astype(str).str.lower()
+
+# Tokenize entire corpus 
+all_text = ' '.join(df['analysis_text'])
+words = re.findall(r'\b[a-z]+\b', all_text)
+
+print(f"Total raw words extracted: {len(words)}")
+
+# Apply Filters (Stopwords & Length)
+# Define standard noise words
+stopwords = set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'but', 'not', 
+                 'play', 'drama', 'tragedy', 'comedy', 'opera', 'farce', 
+                 'act', 'scene', 'prologue', 'epilogue', 'enter', 'exit',
+                 'new', 'old', 'part', 'being', 'entitled'])
+
+filtered_words = [w for w in words if w not in stopwords and len(w) > 1]
+
+common_words = Counter(filtered_words).most_common(500)
+
+print("\nTop 100 Most Frequent Words in Corpus")
+print("Format: (Word, Frequency)")
+for rank, (word, freq) in enumerate(common_words, 1):
+    print(f"{rank}. {word}: {freq}")
+
+Imperial_seeds = [
+    'america', 'new world', 'west indies', 'indies', 'western', 'atlantic', 'virginia', 'canada', 'quebec', 
+    'carolina', 'florida', 'new york', 'boston', 'peru', 'mexico', 'brazil', 'panama', 'guiana', 'amazon', 
+    'inca', 'aztec', 'montezuma', 'cortez', 'pizarro', 'jamaica', 'caribbean', 'barbados', 'cuba', 'haiti', 
+    'domingo', 'bermudas', 'australia', 'botany bay', 'van diemen', 'colony', 'colonization', 'conquest', 
+    'plantation', 'planter', 'slave', 'slavery', 'negro', 'savage', 'voyage', 'discovery', 'island', 'isle', 'indian'
+]
+
+oriental_seeds = [
+'china', 'chinese', 'japan', 'siam', 'cathay', 'tartary', 'tartar', 'mongol', 'india', 'east indies', 
+    'mogul', 'agra', 'bengal', 'ceylon', 'persia', 'persian', 'turk', 'turkish', 'turkey', 'ottoman', 'sultan', 
+    'mahomet', 'mohammed', 'constantinople', 'byzantium', 'seraglio', 'harem', 'islam', 'arabia', 'syria', 
+    'egypt', 'egyptian', 'cairo', 'nile', 'alexandria', 'morocco', 'moor', 'moorish', 'algiers', 'tunis', 
+    'tripoli', 'barbary', 'zara', 'babylon', 'assyria', 'cyrus', 'darius', 'xerxes', 'jerusalem', 'hebrew', 
+    'jew', 'israel'
+]
+
+European_seeds = [
+   'france', 'italy', 'spain', 'germany', 'greece', 'england', 'scotland', 'ireland', 'holland', 'netherlands', 
+    'poland', 'russia', 'muscovy', 'sweden', 'denmark', 'portugal', 'austria', 'hungary', 'swiss', 'flanders',  
+    'rome', 'paris', 'venice', 'naples', 'florence', 'verona', 'sicily', 'vienna', 'madrid', 'lisbon', 'seville', 
+    'athens', 'sparta', 'troy', 'french', 'spanish', 'italian', 'german', 'dutch', 'english', 'scottish', 'irish', 
+    'roman', 'grecian', 'greek', 'venetian', 'sicilian', 'polish', 'russian', 'dane', 'danish', 'portuguese', 
+    'castilian', 'aragonese'
+]
+
+seed_concepts = {
+    'Imperial_Expansion': imperial_seeds,
+    'Oriental_Expansion': oriental_seeds,
+    'European_Expansion': european_seeds
+}
+
+# DEFINE STOPWORDS (Aggressive Filtering)
+stopwords = set([
+    'the', 'and', 'for', 'with', 'that', 'play', 'comedy', 'tragedy', 
+    'entitled', 'called', 'act', 'scene', 'part', 'history', 'opera', 
+    'farce', 'entertainment', 'sketch', 'acts', 'five', 'three', 'two',
+    'one', 'first', 'second', 'new', 'old', 'man', 'woman', 'king', 
+    'queen', 'love', 'life', 'death', 'prologue', 'epilogue', 'drama',
+    'written', 'performed', 'royal', 'theatre', 'majesty', 'late',
+    'great', 'fair', 'young', 'rich', 'poor', 'good', 'bad', 'english', 'etc'
+])
+for label, seeds in seed_concepts.items():
+    print(f"Titles containing {label} seeds...")
+    related_words = Counter()
+    
+    # Iterate through every title 
+    for text in df:
+        text_str = str(text)
+        
+        # Tokenize: simple regex for words
+        title_words = set(re.findall(r'\b[a-z]+\b', text_str))
+        
+        # LOGIC: Title-Level Co-occurrence
+        # If the title contains ANY seed from this category...
+        if not title_words.isdisjoint(seeds):
+            # ... count ALL other words in that title.
+            for w in title_words:
+                # Filter: Not a seed, not a stopword, length > 2
+                if w not in seeds and w not in stopwords and len(w) > 2:
+                    related_words[w] += 1
+    
+    # OUTPUT
+    print(f"   >>> Candidates for {label} Dictionary:")
+    
+    # Get Top 60 to ensure we catch rarer place names
+    top_candidates = related_words.most_common(60)
+    
+    # Format clearly
+    print(f"   {', '.join([f'{w}({c})' for w, c in top_candidates])}")
+import pandas as pd
+import re
+from collections import Counter
+import os
+# STEP 2.2: DICTIONARY EXPANSION (Co-occurrence)
+
+file_path = 'drama_master_cleaned_final.csv'
+
+# Pre-processing
+df['analysis_text'] = df['Cleaned_Title'].astype(str).str.lower()
+
+# Tokenize entire corpus 
+all_text = ' '.join(df['analysis_text'])
+words = re.findall(r'\b[a-z]+\b', all_text)
+
+print(f"Total raw words extracted: {len(words)}")
+
+# Apply Filters (Stopwords & Length)
+# Define standard noise words
+stopwords = set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'but', 'not', 
+                 'play', 'drama', 'tragedy', 'comedy', 'opera', 'farce', 
+                 'act', 'scene', 'prologue', 'epilogue', 'enter', 'exit',
+                 'new', 'old', 'part', 'being', 'entitled'])
+
+filtered_words = [w for w in words if w not in stopwords and len(w) > 1]
+
+common_words = Counter(filtered_words).most_common(500)
+
+print("\nTop 100 Most Frequent Words in Corpus")
+print("Format: (Word, Frequency)")
+for rank, (word, freq) in enumerate(common_words, 1):
+    print(f"{rank}. {word}: {freq}")
+
+Imperial_seeds = [
+    'america', 'new world', 'west indies', 'indies', 'western', 'atlantic', 'virginia', 'canada', 'quebec', 
+    'carolina', 'florida', 'new york', 'boston', 'peru', 'mexico', 'brazil', 'panama', 'guiana', 'amazon', 
+    'inca', 'aztec', 'montezuma', 'cortez', 'pizarro', 'jamaica', 'caribbean', 'barbados', 'cuba', 'haiti', 
+    'domingo', 'bermudas', 'australia', 'botany bay', 'van diemen', 'colony', 'colonization', 'conquest', 
+    'plantation', 'planter', 'slave', 'slavery', 'negro', 'savage', 'voyage', 'discovery', 'island', 'isle', 'indian'
+]
+
+oriental_seeds = [
+'china', 'chinese', 'japan', 'siam', 'cathay', 'tartary', 'tartar', 'mongol', 'india', 'east indies', 
+    'mogul', 'agra', 'bengal', 'ceylon', 'persia', 'persian', 'turk', 'turkish', 'turkey', 'ottoman', 'sultan', 
+    'mahomet', 'mohammed', 'constantinople', 'byzantium', 'seraglio', 'harem', 'islam', 'arabia', 'syria', 
+    'egypt', 'egyptian', 'cairo', 'nile', 'alexandria', 'morocco', 'moor', 'moorish', 'algiers', 'tunis', 
+    'tripoli', 'barbary', 'zara', 'babylon', 'assyria', 'cyrus', 'darius', 'xerxes', 'jerusalem', 'hebrew', 
+    'jew', 'israel'
+]
+
+European_seeds = [
+   'france', 'italy', 'spain', 'germany', 'greece', 'england', 'scotland', 'ireland', 'holland', 'netherlands', 
+    'poland', 'russia', 'muscovy', 'sweden', 'denmark', 'portugal', 'austria', 'hungary', 'swiss', 'flanders',  
+    'rome', 'paris', 'venice', 'naples', 'florence', 'verona', 'sicily', 'vienna', 'madrid', 'lisbon', 'seville', 
+    'athens', 'sparta', 'troy', 'french', 'spanish', 'italian', 'german', 'dutch', 'english', 'scottish', 'irish', 
+    'roman', 'grecian', 'greek', 'venetian', 'sicilian', 'polish', 'russian', 'dane', 'danish', 'portuguese', 
+    'castilian', 'aragonese'
+]
+
+seed_concepts = {
+    'Imperial_Expansion': imperial_seeds,
+    'Oriental_Expansion': oriental_seeds,
+    'European_Expansion': european_seeds
+}
+
+# DEFINE STOPWORDS (Aggressive Filtering)
+stopwords = set([
+    'the', 'and', 'for', 'with', 'that', 'play', 'comedy', 'tragedy', 
+    'entitled', 'called', 'act', 'scene', 'part', 'history', 'opera', 
+    'farce', 'entertainment', 'sketch', 'acts', 'five', 'three', 'two',
+    'one', 'first', 'second', 'new', 'old', 'man', 'woman', 'king', 
+    'queen', 'love', 'life', 'death', 'prologue', 'epilogue', 'drama',
+    'written', 'performed', 'royal', 'theatre', 'majesty', 'late',
+    'great', 'fair', 'young', 'rich', 'poor', 'good', 'bad', 'english', 'etc'
+])
+for label, seeds in seed_concepts.items():
+    print(f"Titles containing {label} seeds...")
+    related_words = Counter()
+    
+    # Iterate through every title 
+    for text in df:
+        text_str = str(text)
+        
+        # Tokenize: simple regex for words
+        title_words = set(re.findall(r'\b[a-z]+\b', text_str))
+        
+        # LOGIC: Title-Level Co-occurrence
+        # If the title contains ANY seed from this category...
+        if not title_words.isdisjoint(seeds):
+            # ... count ALL other words in that title.
+            for w in title_words:
+                # Filter: Not a seed, not a stopword, length > 2
+                if w not in seeds and w not in stopwords and len(w) > 2:
+                    related_words[w] += 1
+    
+    # OUTPUT
+    print(f"   >>> Candidates for {label} Dictionary:")
+    
+    # Get Top 60 to ensure we catch rarer place names
+    top_candidates = related_words.most_common(60)
+    
+    # Format clearly
+    print(f"   {', '.join([f'{w}({c})' for w, c in top_candidates])}")
+import pandas as pd
+import re
+from collections import Counter
+
+# STEP 2.2: DICTIONARY EXPANSION (Co-occurrence)
+
+imperial_seeds = [
+    'empire', 'colony', 'colonial', 'plantation', 'slave', 'slaves', 
+    'indian', 'indies', 'ocean', 'west', 'voyage', 'island', 'virginia', 
+    'conquest', 'merchant', 'siege', 'jamaica', 'bengal'
+]
+
+oriental_seeds = [
+    'sultan', 'mogul', 'harem', 'seraglio', 'east', 'china', 'chinese',
+    'persia', 'persian', 'turk', 'turkey', 'morocco', 'algiers', 'algeria', 
+    'egypt', 'arab', 'tartar', 'tartary'
+]
+
+european_seeds = [
+    'europe', 'german', 'dutch', 'french', 'spanish', 'spain', 
+    'italian', 'italy', 'venice', 'venetian', 'rome', 'roman', 
+    'greek', 'poland', 'russian', 'naples', 'france', 'paris', 
+    'sicily', 'sicilian', 'albion', 'hibernia', 'caledonia'
+]
+
+# Map them to labels
+seed_concepts = {
+    'Imperial_Expansion': imperial_seeds,
+    'Oriental_Expansion': oriental_seeds,
+    'European_Expansion': european_seeds
+}
+
+# 2. DEFINE STOPWORDS (Aggressive Filtering)
+# We remove generic words so the "Place Names" stand out more.
+stopwords = set([
+    'the', 'and', 'for', 'with', 'that', 'play', 'comedy', 'tragedy', 
+    'entitled', 'called', 'act', 'scene', 'part', 'history', 'opera', 
+    'farce', 'entertainment', 'sketch', 'acts', 'five', 'three', 'two',
+    'one', 'first', 'second', 'new', 'old', 'man', 'woman', 'king', 
+    'queen', 'love', 'life', 'death', 'prologue', 'epilogue', 'drama',
+    'written', 'performed', 'royal', 'theatre', 'majesty', 'late',
+    'great', 'fair', 'young', 'rich', 'poor', 'good', 'bad', 'english', 'etc'
+])
+
+
+for label, seeds in seed_concepts.items():
+    print(f"Titles containing {label} seeds")
+    related_words = Counter()
+    
+    # Iterate through every title in the dataframe
+    # Ensure 'analysis_text' exists (from Step 1)
+    for text in df['analysis_text']:
+        text_str = str(text)
+        
+        # Tokenize: simple regex for words
+        title_words = set(re.findall(r'\b[a-z]+\b', text_str))
+        
+        # LOGIC: Title-Level Co-occurrence
+        # If the title contains ANY seed from this category...
+        if not title_words.isdisjoint(seeds):
+            # ... count ALL other words in that title.
+            for w in title_words:
+                # Filter: Not a seed, not a stopword, length > 2
+                if w not in seeds and w not in stopwords and len(w) > 2:
+                    related_words[w] += 1
+    
+    # OUTPUT
+    print(f"   >>> Candidates for {label} Dictionary:")
+    
+    # Get Top 60 to ensure we catch rarer place names
+    top_candidates = related_words.most_common(60)
+    
+    # Format clearly
+    print(f"   {', '.join([f'{w}({c})' for w, c in top_candidates])}")
+import pandas as pd
+import re
+
+# PART 3: Temporal Analysis of Geographic Themes (100% Stacked Data)
+
+df = pd.read_csv('drama_master_cleaned_final.csv')
+
+# Define FULL Dictionaries
+continental_terms = [
+    'france', 'italy', 'spain', 'germany', 'greece', 'england', 'scotland', 'ireland', 'holland', 'netherlands', 
+    'poland', 'russia', 'muscovy', 'sweden', 'denmark', 'portugal', 'austria', 'hungary', 'swiss', 'flanders',  
+    'rome', 'paris', 'venice', 'naples', 'florence', 'verona', 'sicily', 'vienna', 'madrid', 'lisbon', 'seville', 
+    'athens', 'sparta', 'troy', 'french', 'spanish', 'italian', 'german', 'dutch', 'english', 'scottish', 'irish', 
+    'roman', 'grecian', 'greek', 'venetian', 'sicilian', 'polish', 'russian', 'dane', 'danish', 'portuguese', 
+    'castilian', 'aragonese'
+]
+
+colonial_terms = [
+    'america', 'new world', 'west indies', 'indies', 'western', 'atlantic', 'virginia', 'canada', 'quebec', 
+    'carolina', 'florida', 'new york', 'boston', 'peru', 'mexico', 'brazil', 'panama', 'guiana', 'amazon', 
+    'inca', 'aztec', 'montezuma', 'cortez', 'pizarro', 'jamaica', 'caribbean', 'barbados', 'cuba', 'haiti', 
+    'domingo', 'bermudas', 'australia', 'botany bay', 'van diemen', 'colony', 'colonization', 'conquest', 
+    'plantation', 'planter', 'slave', 'slavery', 'negro', 'savage', 'voyage', 'discovery', 'island', 'isle', 'indian'
+]
+
+oriental_terms = [
+    'china', 'chinese', 'japan', 'siam', 'cathay', 'tartary', 'tartar', 'mongol', 'india', 'east indies', 
+    'mogul', 'agra', 'bengal', 'ceylon', 'persia', 'persian', 'turk', 'turkish', 'turkey', 'ottoman', 'sultan', 
+    'mahomet', 'mohammed', 'constantinople', 'byzantium', 'seraglio', 'harem', 'islam', 'arabia', 'syria', 
+    'egypt', 'egyptian', 'cairo', 'nile', 'alexandria', 'morocco', 'moor', 'moorish', 'algiers', 'tunis', 
+    'tripoli', 'barbary', 'zara', 'babylon', 'assyria', 'cyrus', 'darius', 'xerxes', 'jerusalem', 'hebrew', 
+    'jew', 'israel'
+]
+
+
+# Define Counting Logic 
+def count_terms_in_series(text_series, term_list):
+    """
+    Counts how many rows in the series contain at least one term from the list.
+    """
+    # CRITICAL FIX: Use (?:...) instead of (...)
+    # This creates a "Non-Capturing Group" which silences the Pandas UserWarning.
+    pattern = r'\b(?:' + '|'.join(term_list) + r')\b'
+    
+    # Check each row (case-insensitive)
+    matches = text_series.astype(str).str.contains(pattern, case=False, na=False, regex=True)
+    
+    return matches.sum()
+
+# Aggregate Data by Decade
+
+counts = df.groupby('Decade_Label').agg(
+    Continental=('Cleaned_Title', lambda x: count_terms_in_series(x, continental_terms)),
+    Colonial=('Cleaned_Title', lambda x: count_terms_in_series(x, colonial_terms)),
+    Oriental=('Cleaned_Title', lambda x: count_terms_in_series(x, oriental_terms))
+).reset_index()
+
+# Normalize Data (Calculate %)
+# Calculate Total Geographic Mentions per Decade
+counts['Total_Geo_Mentions'] = counts[['Continental', 'Colonial', 'Oriental']].sum(axis=1)
+
+# Filter out decades with 0 mentions to avoid division errors
+counts = counts[counts['Total_Geo_Mentions'] > 0].copy()
+
+# Calculate percentages (0.0 to 1.0)
+counts['Pct_Continental'] = counts['Continental'] / counts['Total_Geo_Mentions']
+counts['Pct_Colonial'] = counts['Colonial'] / counts['Total_Geo_Mentions']
+counts['Pct_Oriental'] = counts['Oriental'] / counts['Total_Geo_Mentions']
+
+print("Processing complete. Preview of results:")
+print(counts.head())
+
+counts.to_csv('geo_trends_by_decade.csv', index=False)
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick 
+import seaborn as sns
+
+# Ensure the DataFrame is sorted by Decade
+counts = counts.sort_values('Decade_Label')
+
+# Set 'Decade_Label' as the index for the X-axis
+# Select the PERCENTAGE columns calculated in Step 3
+plot_data = counts.set_index('Decade_Label')[['Pct_Continental', 'Pct_Colonial', 'Pct_Oriental']]
+
+# Rename columns for the Legend
+plot_data.columns = ['Continental (Europe)', 'Colonial (New World)', 'Oriental (Exotic)']
+
+# Fill NaN with 0
+plot_data = plot_data.fillna(0)
+
+# Setup Plot Style
+
+sns.set_style("whitegrid")
+plt.rcParams['font.family'] = 'sans-serif' 
+
+# Create figure
+fig, ax = plt.subplots(figsize=(16, 8))
+
+# Generate 100% Stacked Bar Chart
+plot_data.plot(kind='bar', 
+               stacked=True, 
+               ax=ax, 
+               width=0.85, 
+               color=['#a6cee3', '#b2df8a', '#fb9a99'], # Academic pastel colors
+               edgecolor='white', 
+               linewidth=0.5)
+
+# Polish and Annotate
+# Title & Labels
+plt.title('Evolution of Geographic Discourses in British Drama Titles (Relative Proportions)', 
+          fontsize=16, weight='bold', pad=20)
+plt.xlabel('Decade of Publication', fontsize=13)
+plt.ylabel('Share of Geographic References', fontsize=13)
+
+# Fix X-axis Labels (Rotate 45 degrees)
+plt.xticks(rotation=45, ha='right', fontsize=10)
+
+ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
+
+# Move Legend outside to the right
+plt.legend(title='Geographic Theme', 
+           bbox_to_anchor=(1.01, 1), 
+           loc='upper left', 
+           frameon=True, 
+           fontsize=11)
+
+# Add strict limits
+plt.ylim(0, 1)
+plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+# Adjust layout to make room for the external legend
+plt.tight_layout()
+
+plt.savefig('geographic_trends_plot_v2.png', dpi=300)
+plt.show()
+
