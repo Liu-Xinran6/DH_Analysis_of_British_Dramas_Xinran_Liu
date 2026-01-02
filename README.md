@@ -1,21 +1,33 @@
-# Introduction to Digital Humanities_Individual Project
-## Analysis of British Dramas 16th to 20th Century
-### Xinran Liu (r1069247)
-### 1 About the Project
-This is the second part, i.e. personal analysis part, of the data analysis and project management assignment of the course Introduction to Digital Humanities, KU Leuven, following the group project in which the raw data of British Drama Metadata was cleaned with OpenRefine. In this part, I further processed the data with Python, made descriptive analysis of the number of publications, authorship, publication patterns over time, and explored the socio-cultural features mirrored by the evolution of keywords in the dramatic titles.
-This repository includes:
-- data (cleaned with OpenRefine): British Drama Metadata (1540-1926), including Comedy, Tragedy and Play
-- Wrangled Data for Analysis
-- Project Management Plan
-- Codes and Tools
-- Charts and Tables Generated
+# Introduction to Digital Humanities — Individual Project
+## Analysis of British Drama Metadata (1540–1926)
+**Xinran Liu (r1069247)**
 
-### 2 Research Questions
--Is there an evolution of Geographical Terms in the British Drama Titles from mid-16th Century to early 20th Century
--Do title keywords indicate a shift from aristocratic to domestic themes over time?
-### 3 Tools & Packages Used
-**Software:**  
-Python for further analysis, Tableau for visualization and GitHub for version control.
+## 1. About the Project
+This repository contains the individual analysis component of the *Introduction to Digital Humanities* course (KU Leuven). It follows a group project in which the raw British drama metadata was cleaned using **OpenRefine**.
 
-### 4 Acknowledgements 
--AI tools have been used for extracting geographical terms and keywords in the aristocratic/private domain
+In this individual project, I further processed the cleaned dataset in **Python** to:
+- describe publication trends over time,
+- examine authorship patterns, and
+- explore socio-cultural signals reflected in the evolution of keywords in drama titles.
+
+### Repository contents
+- `data/`: cleaned British Drama Metadata (1540–1926) from the group project (OpenRefine output)
+- `data_wrangled/`: derived datasets used in analysis
+- `Codes and tools`: Python code for cleaning, analysis, and feature extraction
+- `outputs/`: charts, tables, and exported figures
+- `project management/`: project management plan and additional documentation
+
+## 2. Research Questions
+1. How do **geographical terms** in British drama titles change from the mid-16th century to the early 20th century?
+2. Do title keywords suggest a shift in dominant themes (e.g., from **aristocratic** to more **domestic** topics) over time?
+
+## 3. Tools & Packages Used
+- **Python** (data wrangling and analysis)
+- **Tableau** (visualization)
+- **GitHub** (version control)
+
+ Key Python libraries: pandas, numpy, matplotlib/seaborn, regex.
+
+## 4. Acknowledgements
+AI tools were used to support parts of the workflow (e.g., code troubleshooting and language polishing).
+
